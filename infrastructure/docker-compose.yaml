@@ -1,0 +1,167 @@
+name: taskmate
+
+services:
+
+  web:
+    build:
+      context: ../apps/web
+      dockerfile: Dockerfile
+    container_name: taskmate-web
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      N8N_WEBHOOK:  "http://n8n:5678/webhook/taskmate-auth"
+      N8N_WEBHOOK_SECRET: "TaskMateN8nSecret2026"
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    ports:
+      - "${WEB_PORT}:3000"
+    networks:
+      - taskmate-network
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: taskmate-postgres
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+    ports:
+      - "${POSTGRES_PORT}:5432"
+
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - taskmate-network
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    image: redis:8-alpine
+    container_name: taskmate-redis
+
+    restart: unless-stopped
+
+    ports:
+      - "${REDIS_PORT}:6379"
+
+    volumes:
+      - redis-data:/data
+
+    networks:
+      - taskmate-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: taskmate-pgadmin
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+
+    ports:
+      - "${PGADMIN_PORT}:80"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    networks:
+      - taskmate-network
+
+  minio:
+    image: quay.io/minio/minio
+    container_name: taskmate-minio
+
+    restart: unless-stopped
+
+    command: server /data --console-address ":9001"
+
+    env_file:
+      - .env
+
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+
+    ports:
+      - "${MINIO_API_PORT}:9000"
+      - "${MINIO_CONSOLE_PORT}:9001"
+
+    volumes:
+      - minio-data:/data
+
+    networks:
+      - taskmate-network
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: taskmate-n8n
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      N8N_SECURE_COOKIE: false
+      N8N_HOST: ${N8N_HOST}
+      N8N_PORT: 5678
+      GENERIC_TIMEZONE: ${GENERIC_TIMEZONE}
+
+    ports:
+      - "${N8N_PORT}:5678"
+
+    volumes:
+      - n8n-data:/home/node/.n8n
+
+    networks:
+      - taskmate-network
+
+volumes:
+
+  postgres-data:
+
+  redis-data:
+
+  minio-data:
+
+  n8n-data:
+
+networks:
+
+  taskmate-network:
+    driver: bridge
