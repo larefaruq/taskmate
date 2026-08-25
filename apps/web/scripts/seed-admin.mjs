@@ -8,7 +8,15 @@ const prisma = new PrismaClient({ adapter });
 
 try {
   const email = process.env.ADMIN_EMAIL || "admin@taskmate.com";
-  const password = process.env.ADMIN_PASSWORD || "admin123";
+  const password = process.env.ADMIN_PASSWORD;
+
+  if (!password) {
+    console.error(
+      "ERROR: ADMIN_PASSWORD wajib di-set (lihat .env.example). Seed admin dibatalkan."
+    );
+    process.exit(1);
+  }
+
   const hash = await bcrypt.hash(password, 10);
 
   await prisma.user.upsert({

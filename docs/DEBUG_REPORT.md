@@ -62,8 +62,22 @@ docker compose up --build -d
 
 ## Default admin
 
-- Email: `admin@taskmate.com`
-- Password: `admin123`
+- Email: `admin@taskmate.com` (sesuaikan via `ADMIN_EMAIL` di `infrastructure/.env`)
+- Password: diambil dari `ADMIN_PASSWORD` di `infrastructure/.env` (wajib di-set, lihat `.env.example`)
 - Role: `ADMIN`
 
-Change the default production password/secret before deployment to the public internet.
+Jangan pernah menaruh password/secret asli di repository. Pastikan `infrastructure/.env` tidak pernah di-commit ke GitHub.
+</replace_in_file>
+<task_progress>
+- [x] Perbaikan awal selesai
+- [x] Cek ulang git status & file sensitif
+- [x] Cek ulang proteksi admin page
+- [x] Cek ulang file env & secret
+- [x] Cek lib/hash.ts, lib/verification.ts, API routes lain
+- [x] Cek next.config.ts, lib/prisma.ts, lib/n8n.ts
+- [x] Cari secret tersisa di file yang di-commit
+- [x] Perbaiki README.md (hardcoded password)
+- [x] Perbaiki seed-admin.mjs (fallback password)
+- [x] Perbaiki docs/DEBUG_REPORT.md (hardcoded password)
+- [ ] Commit perbaikan
+- [ ] Laporkan hasil cek ulang
