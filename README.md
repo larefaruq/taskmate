@@ -21,12 +21,6 @@ Tunggu container `taskmate-postgres` menjadi healthy dan `taskmate-web` selesai 
 - MinIO Console: http://localhost:9001
 - n8n: http://localhost:5678
 
-## Akun admin otomatis
-
-- Email: `admin@taskmate.com`
-- Password: diambil dari environment variable `ADMIN_PASSWORD` (lihat `.env.example`)
-- Role: `ADMIN`
-
 Container web menjalankan `prisma db push` lalu `scripts/seed-admin.mjs`, sehingga akun admin akan dibuat/di-upsert otomatis.
 
 ## Debug yang sudah dilakukan
